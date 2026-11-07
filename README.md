@@ -58,8 +58,20 @@ runner; `--transport webrtc` opens a browser client). `examples/voice-vartalaap-
 
 ## Benchmark
 
-`bench/bench.py` times the service through a real pipeline against raw WebSocket calls, interleaved. Results:
-`bench/RESULTS.md` (pending the first run with a key).
+`bench/bench.py` times the service through a real pipeline (TTSStartedFrame to the first TTSAudioRawFrame, then to
+TTSStoppedFrame) against raw WebSocket calls to the same API, interleaved so network drift hits both alike. From a Mac
+on a home connection to `api.vartaloop.ai` (Mumbai), 2026-11-08, 8 iterations, warm prefill cache:
+
+| path | text | TTFA p50 ms | TTFA p95 ms | E2E p50 ms | audio s | service − raw TTFA p50 ms |
+|---|---|---|---|---|---|---|
+| ws/raw | 1s | 40.2 | 53.0 | 326 | 2.92 |  |
+| pipecat/ws | 1s | 41.9 | 49.9 | 343 | 3.12 | +1.6 |
+| ws/raw | 3s | 46.1 | 50.4 | 1610 | 15.00 |  |
+| pipecat/ws | 3s | 41.1 | 43.3 | 1555 | 14.88 | -2.6 |
+
+The service adds about 2 ms to time-to-first-audio over a raw WebSocket call (within the run-to-run noise); the
+3-sentence turn is three utterances sent back to back, so its audio flows without a gap between sentences. Raw numbers:
+`bench/RESULTS.md`.
 
 ## Tests
 

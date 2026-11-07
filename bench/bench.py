@@ -69,7 +69,17 @@ class RawWS:
     async def speak(self, sentences: list[str]) -> Sample:
         t0 = time.perf_counter()
         for i, s in enumerate(sentences):
-            await self._ws.send_str(json.dumps({"text": s, "voice": "saanvi", "format": "pcm16", "digits": "auto", "request_id": f"b{i}"}))
+            await self._ws.send_str(
+                json.dumps(
+                    {
+                        "text": s,
+                        "voice": "saanvi",
+                        "format": "pcm16",
+                        "digits": "auto",
+                        "request_id": f"b{i}",
+                    }
+                )
+            )
         first, n, ended = None, 0, 0
         while ended < len(sentences):
             msg = await self._ws.receive(timeout=30)
@@ -128,34 +138,49 @@ class _Sink:
                     timer.done.set()
                 await self.push_frame(frame, direction)
 
-        self.worker = PipelineWorker(Pipeline([tts, Sink()]), params=PipelineParams(enable_metrics=False))
-        self.runner = WorkerRunner(handle_sigint=False, auto_end=False)
+        self.worker = PipelineWorker(
+            Pipeline([tts, Sink()]), params=PipelineParams(enable_metrics=False)
+        )
+        self.runner = WorkerRunner(handle_sigint=False)
         self.task = None
 
     async def start(self) -> None:
         await self.runner.add_workers(self.worker)
-        self.task = asyncio.create_task(self.runner.run())
+        self.task = asyncio.create_task(self.runner.run(auto_end=False))
         await asyncio.sleep(0.5)  # setup + WebSocket connect
 
     async def stop(self) -> None:
-        await self.runner.cancel()
+        try:
+            await asyncio.wait_for(self.runner.cancel(), 5)
+        except Exception:  # noqa: BLE001, S110
+            pass
         if self.task:
             self.task.cancel()
 
     async def turn(self, text: str) -> Sample:
         """Speak ``text`` as one LLM turn; TTFA counts from the first utterance being sent."""
-        from pipecat.frames.frames import LLMFullResponseEndFrame, LLMFullResponseStartFrame, LLMTextFrame
+        from pipecat.frames.frames import (
+            LLMFullResponseEndFrame,
+            LLMFullResponseStartFrame,
+            LLMTextFrame,
+        )
 
         self.timer.reset()
-        await self.worker.queue_frames([LLMFullResponseStartFrame(), LLMTextFrame(text), LLMFullResponseEndFrame()])
+        await self.worker.queue_frames(
+            [LLMFullResponseStartFrame(), LLMTextFrame(text), LLMFullResponseEndFrame()]
+        )
         await asyncio.wait_for(self.timer.done.wait(), 60)
         t = self.timer
-        return Sample((t.t_first - t.t_start) * 1e3, (t.t_stop - t.t_start) * 1e3, t.n / BYTES_PER_S)
+        return Sample(
+            (t.t_first - t.t_start) * 1e3, (t.t_stop - t.t_start) * 1e3, t.n / BYTES_PER_S
+        )
 
 
 async def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base-url", default=os.environ.get("VARTALAAP_BASE_URL", "https://api.vartaloop.ai"))
+    ap.add_argument(
+        "--base-url", default=os.environ.get("VARTALAAP_BASE_URL", "https://api.vartaloop.ai")
+    )
     ap.add_argument("--iters", type=int, default=8)
     args = ap.parse_args()
     key = os.environ.get("VARTALAAP_API_KEY") or sys.exit("set VARTALAAP_API_KEY")
@@ -179,16 +204,25 @@ async def main() -> None:
             series["ws/raw/3s"].samples.append(await raw.speak(sentences_of(THREE)))
             series["pipecat/ws/3s"].samples.append(await pipe.turn(THREE))
         await raw.close()
-        await pipe.stop()
 
     print(f"## Latency ({args.iters} interleaved iterations, warm)\n")
-    print("| path | text | TTFA p50 ms | TTFA p95 ms | E2E p50 ms | audio s | service − raw TTFA p50 ms |")
+    print(
+        "| path | text | TTFA p50 ms | TTFA p95 ms | E2E p50 ms | audio s | service − raw TTFA p50 ms |"
+    )
     print("|---|---|---|---|---|---|---|")
     for text in ("1s", "3s"):
         r, p = series[f"ws/raw/{text}"], series[f"pipecat/ws/{text}"]
         for s, label in ((r, "ws/raw"), (p, "pipecat/ws")):
             delta = f"{p.median('ttfa_ms') - r.median('ttfa_ms'):+.1f}" if s is p else ""
-            print(f"| {label} | {text} | {s.p('ttfa_ms', 0.5):.1f} | {s.p('ttfa_ms', 0.95):.1f} | {s.p('e2e_ms', 0.5):.0f} | {s.median('audio_s'):.2f} | {delta} |")
+            print(
+                f"| {label} | {text} | {s.p('ttfa_ms', 0.5):.1f} | {s.p('ttfa_ms', 0.95):.1f} | {s.p('e2e_ms', 0.5):.0f} | {s.median('audio_s'):.2f} | {delta} |"
+            )
+    sys.stdout.flush()
+    try:
+        await asyncio.wait_for(pipe.stop(), 5)
+    finally:
+        # the pipeline's transport-less teardown can linger; the numbers are out, leave
+        os._exit(0)
 
 
 if __name__ == "__main__":
