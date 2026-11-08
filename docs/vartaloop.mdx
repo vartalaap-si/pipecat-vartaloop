@@ -1,107 +1,180 @@
 ---
-title: "Vartaloop"
-description: "Hinglish and Indian-language text-to-speech with Vartaloop"
+title: "Vartaloop Text-to-Speech"
+sidebarTitle: "Vartaloop"
+description: "Hinglish and Indian-language TTS with VartaloopTTSService over WebSocket and VartaloopHttpTTSService over HTTP, streamed per sentence."
 ---
+
+import { CommunityMaintained } from "/snippets/community-maintained.mdx";
+
+<CommunityMaintained
+  maintainer="Vartaloop"
+  maintainerUrl="https://github.com/vartalaap-si"
+  repo="https://github.com/vartalaap-si/pipecat-vartaloop"
+/>
 
 ## Overview
 
-`VartaloopTTSService` converts text to speech with [Vartaloop](https://vartaloop.ai), a Hinglish and Indian-language
-TTS API, over one WebSocket per session. Every sentence of a turn is sent as its own utterance as soon as it is
-aggregated; the server serves them in order and streams each one's 24 kHz PCM back from its first 80 ms frame.
-`VartaloopHttpTTSService` does the same over HTTP, one request per sentence.
+`VartaloopTTSService` generates Hinglish and Indian-language speech from
+[Vartaloop](https://vartaloop.ai) over one WebSocket per session, sending each
+sentence as its own utterance as soon as it is aggregated.
+`VartaloopHttpTTSService` does the same with one HTTP request per sentence.
 
-<CardGroup cols={3}>
-  <Card title="API Reference" icon="code" href="https://docs.pipecat.ai/api-reference/server/services/tts/vartaloop">
-    Pipecat's API methods and parameters
+<CardGroup cols={2}>
+  <Card
+    title="Source Repository"
+    icon="github"
+    href="https://github.com/vartalaap-si/pipecat-vartaloop"
+  >
+    Source code, tests, and issues for the Vartaloop integration
+  </Card>
+  <Card
+    title="Example"
+    icon="play"
+    href="https://github.com/vartalaap-si/pipecat-vartaloop/blob/main/examples/voice-vartaloop.py"
+  >
+    A Hinglish voice agent using `VartaloopTTSService`
+  </Card>
+  <Card
+    title="PyPI Package"
+    icon="cube"
+    href="https://pypi.org/project/pipecat-vartaloop/"
+  >
+    The `pipecat-vartaloop` package on PyPI
   </Card>
   <Card title="Vartaloop Docs" icon="book" href="https://docs.vartaloop.ai">
-    Voices, normalisation and the API
-  </Card>
-  <Card title="Example Code" icon="play" href="https://github.com/pipecat-ai/pipecat/blob/main/examples/voice/voice-vartaloop.py">
-    A Hinglish voice agent
+    Voices, text normalisation, and the API reference
   </Card>
 </CardGroup>
 
 ## Installation
 
+This is a community-maintained package distributed separately from `pipecat-ai`:
+
 ```bash
-uv add "pipecat-ai[vartaloop]"
+uv add pipecat-vartaloop
 ```
 
-You'll need an API key from the [Vartaloop portal](https://tts.vartaloop.ai), set as `VARTALOOP_API_KEY`.
+## Prerequisites
+
+1. **Vartaloop account**: sign up at [tts.vartaloop.ai](https://tts.vartaloop.ai).
+2. **API key**: create one in the portal.
+
+### Required Environment Variables
+
+- `VARTALOOP_API_KEY`: your Vartaloop API key
 
 ## Configuration
 
-### Constructor parameters
+### VartaloopTTSService
 
-<ParamField path="api_key" type="str" required>
-  The Vartaloop API key (`vt_live_…`). Read from `VARTALOOP_API_KEY` when not given.
+<ParamField path="api_key" type="str | None" default="None">
+  Vartaloop API key. When `None`, it is read from `VARTALOOP_API_KEY`. Raises
+  `ValueError` when neither is set.
 </ParamField>
-<ParamField path="url" type="str" default="wss://api.vartaloop.ai/v1/tts/stream">
-  The WebSocket endpoint (`VartaloopTTSService`). `VartaloopHttpTTSService` takes `base_url`.
+
+<ParamField
+  path="url"
+  type="str"
+  default="wss://api.vartaloop.ai/v1/tts/stream"
+>
+  WebSocket endpoint.
 </ParamField>
-<ParamField path="sample_rate" type="int" default="None">
-  Output sample rate. The API produces 24 kHz; audio is resampled when the pipeline runs at another rate.
+
+<ParamField path="sample_rate" type="int | None" default="None">
+  Output sample rate in Hz. When `None`, the pipeline's rate is used. The API
+  produces 24 kHz audio, which is resampled when the rates differ.
 </ParamField>
-<ParamField path="settings" type="VartaloopTTSService.Settings">
-  Runtime-updatable settings, see below.
+
+<ParamField
+  path="settings"
+  type="VartaloopTTSService.Settings | None"
+  default="None"
+>
+  Runtime-configurable settings. See [Settings](#settings).
+</ParamField>
+
+### VartaloopHttpTTSService
+
+Takes `api_key`, `sample_rate`, and `settings` as above, plus:
+
+<ParamField
+  path="aiohttp_session"
+  type="aiohttp.ClientSession | None"
+  default="None"
+>
+  HTTP session to reuse. When `None`, the service creates one.
+</ParamField>
+
+<ParamField path="base_url" type="str" default="https://api.vartaloop.ai">
+  API base URL.
 </ParamField>
 
 ### Settings
 
-<ParamField path="voice" type="str" default="saanvi">
-  Voice id; `GET /v1/voices` lists them. The voice decides the language and so the text normaliser.
-</ParamField>
-<ParamField path="expression" type="str" default="neutral">
-  Delivery: `neutral`, `excited`, `sad`, `whisper` (alias `style`). A voice without the expression plays neutral.
-</ParamField>
-<ParamField path="digits" type="str" default="auto">
-  How digits are read in Hinglish text: `hi`, `mixed`, `en` or `auto`.
-</ParamField>
-<ParamField path="speed" type="float" default="None">
-  Speaking pace 0.5–2.0, pitch preserved (alias `pace`).
-</ParamField>
-<ParamField path="temperature" type="float" default="None">Sampling noise 0–2 (server default 0.3).</ParamField>
-<ParamField path="seed" type="int" default="None">Fixed sampling seed.</ParamField>
-<ParamField path="postfx" type="bool" default="None">The server's loudness / high-pass / limiter chain (default on).</ParamField>
-<ParamField path="profile" type="str" default="None">`default` or `telephony` (shaped for 8 kHz mu-law).</ParamField>
-<ParamField path="raw" type="bool" default="False">Skip the server's text normaliser.</ParamField>
+Both services take `VartaloopTTSService.Settings`. Every field can be changed
+with `TTSUpdateSettingsFrame` and applies from the next sentence, without
+reconnecting.
 
-## Usage example
+| Field         | Type            | Default     | Description                                                                                                                                        |
+| ------------- | --------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `voice`       | `str`           | `"saanvi"`  | Voice id. The voice sets the language. See the [Vartaloop docs](https://docs.vartaloop.ai) for the voice list.                                     |
+| `expression`  | `str`           | `"neutral"` | Delivery: `"neutral"`, `"excited"`, `"sad"`, or `"whisper"`. A voice without the expression plays neutral. Alias: `style`.                         |
+| `digits`      | `str`           | `"auto"`    | How digits are read in Hinglish text: `"auto"`, `"hi"` (Hindi number words), `"mixed"` (codes in English, amounts in Hindi), or `"en"`.            |
+| `speed`       | `float \| None` | `None`      | Speaking pace from 0.5 to 2.0, pitch preserved. `None` keeps the voice's own pace. Alias: `pace`.                                                  |
+| `temperature` | `float \| None` | `None`      | Sampling temperature from 0 to 2. `None` uses the server default.                                                                                  |
+| `seed`        | `int \| None`   | `None`      | Fixed sampling seed for reproducible audio.                                                                                                        |
+| `postfx`      | `bool \| None`  | `None`      | Server-side loudness normalisation, high-pass, and limiter. `None` uses the server default.                                                        |
+| `profile`     | `str \| None`   | `None`      | `"default"` or `"telephony"`, which shapes audio for 8 kHz phone calls.                                                                            |
+| `raw`         | `bool`          | `False`     | Skip the server's text normaliser, for text that is already normalised.                                                                            |
+
+## Usage
+
+### Speak in a Voice Agent
+
+Add the service to a pipeline after the LLM:
 
 ```python
-from pipecat.services.vartaloop.tts import VartaloopTTSService
+import os
+
+from pipecat.pipeline.pipeline import Pipeline
+from pipecat_vartaloop import VartaloopTTSService
 
 tts = VartaloopTTSService(
     api_key=os.getenv("VARTALOOP_API_KEY"),
-    settings=VartaloopTTSService.Settings(voice="saanvi", digits="auto"),
+    settings=VartaloopTTSService.Settings(voice="saanvi", digits="mixed"),
 )
 
-pipeline = Pipeline([
-    transport.input(),
-    stt,
-    user_aggregator,
-    llm,
-    tts,
-    transport.output(),
-    assistant_aggregator,
-])
+pipeline = Pipeline(
+    [
+        transport.input(),
+        stt,
+        user_aggregator,
+        llm,
+        tts,
+        transport.output(),
+        assistant_aggregator,
+    ]
+)
 ```
 
-Change any setting mid-call with `TTSUpdateSettingsFrame(delta=VartaloopTTSService.Settings(expression="excited"))`; it
-applies from the next sentence without reconnecting.
+### Change the Expression Mid-Call
 
-## Frame flow
+Push a `TTSUpdateSettingsFrame`:
 
-```mermaid
-graph TD
-    A[TextFrame] --> B[VartaloopTTSService]
-    B --> C[TTSStartedFrame]
-    B --> D[TTSAudioRawFrame 24 kHz pcm16]
-    B --> E[TTSStoppedFrame]
-    B --> F[ErrorFrame]
+```python
+from pipecat.frames.frames import TTSUpdateSettingsFrame
+
+await task.queue_frame(
+    TTSUpdateSettingsFrame(
+        delta=VartaloopTTSService.Settings(expression="excited")
+    )
+)
 ```
 
-## Metrics
+## Notes
 
-Time to first byte (stopped on the server's `first_audio_ms` event), usage characters per utterance.
+- **Interruptions**: `VartaloopTTSService` drops the interrupted turn's audio
+  and reopens its WebSocket, so the server stops synthesising it. Use it for
+  conversational agents, and `VartaloopHttpTTSService` for pipelines without
+  interruptions.
+- **Compatibility**: tested with Pipecat 1.15.

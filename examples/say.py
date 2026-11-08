@@ -24,7 +24,7 @@ from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.workers.runner import WorkerRunner
 
-from pipecat.services.vartaloop.tts import VartaloopTTSService
+from pipecat_vartaloop import VartaloopTTSService
 
 
 class WavSink(FrameProcessor):

@@ -1,18 +1,19 @@
-# pipecat-ai-vartaloop
+# pipecat-vartaloop
 
 [Vartaloop](https://vartaloop.ai) text-to-speech for [Pipecat](https://github.com/pipecat-ai/pipecat): Hinglish and
-Indian-language voices (model `narad`), streamed from the first 80 ms frame. This repository is the development home of
-`pipecat.services.vartaloop`, proposed to Pipecat core; it is also installable on its own.
+Indian-language voices (model `narad`), streamed from the first 80 ms frame. It is a
+[Pipecat community integration](https://docs.pipecat.ai/api-reference/server/services/community-integrations), installed
+as its own package and imported as `pipecat_vartaloop`.
 
 Tested with Pipecat 1.15 (`main`, 2026-11-07). Maintained by Vartaloop, the company behind the service.
 
 ```bash
-uv add pipecat-ai-vartaloop          # or: uv add "pipecat-ai[vartaloop]" once merged upstream
+uv add pipecat-vartaloop
 export VARTALOOP_API_KEY=vt_live_…    # from https://tts.vartaloop.ai
 ```
 
 ```python
-from pipecat.services.vartaloop.tts import VartaloopTTSService
+from pipecat_vartaloop import VartaloopTTSService
 
 tts = VartaloopTTSService(
     api_key=os.environ["VARTALOOP_API_KEY"],

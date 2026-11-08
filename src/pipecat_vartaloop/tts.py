@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024-2026, Daily
+# Copyright (c) 2026, Vartaloop
 #
 # SPDX-License-Identifier: BSD 2-Clause License
 #
@@ -20,8 +20,6 @@ from typing import Any, ClassVar
 
 import aiohttp
 from loguru import logger
-from websockets.protocol import State
-
 from pipecat.frames.frames import (
     ErrorFrame,
     Frame,
@@ -35,6 +33,7 @@ from pipecat.services.tts_service import TTSService, WebsocketTTSService
 from pipecat.transcriptions.language import Language
 from pipecat.utils.tracing.service_decorators import traced_tts
 from pipecat.utils.types import NOT_GIVEN, NotGiven, is_given
+from websockets.protocol import State
 
 VARTALOOP_API_KEY_ENV = "VARTALOOP_API_KEY"
 _LEGACY_API_KEY_ENV = "VARTALAAP_API_KEY"  # the product's earlier name, still honoured

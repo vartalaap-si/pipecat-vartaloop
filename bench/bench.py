@@ -186,7 +186,7 @@ async def main() -> None:
     key = os.environ.get("VARTALOOP_API_KEY") or sys.exit("set VARTALOOP_API_KEY")
     base = args.base_url.rstrip("/")
 
-    from pipecat.services.vartaloop.tts import VartaloopTTSService
+    from pipecat_vartaloop import VartaloopTTSService
 
     print(f"# Vartaloop TTS bench — Pipecat service — {time.strftime('%Y-%m-%d %H:%M')} — {base}\n")
     series = {k: Series(k) for k in ("ws/raw/1s", "pipecat/ws/1s", "ws/raw/3s", "pipecat/ws/3s")}

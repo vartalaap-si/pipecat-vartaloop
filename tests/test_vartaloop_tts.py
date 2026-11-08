@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024-2026, Daily
+# Copyright (c) 2026, Vartaloop
 #
 # SPDX-License-Identifier: BSD 2-Clause License
 #
@@ -16,9 +16,6 @@ import json
 from dataclasses import dataclass, field
 
 import pytest
-from websockets.asyncio.server import serve
-from websockets.exceptions import ConnectionClosed
-
 from pipecat.frames.frames import (
     ErrorFrame,
     LLMFullResponseEndFrame,
@@ -31,13 +28,16 @@ from pipecat.frames.frames import (
     TTSTextFrame,
     TTSUpdateSettingsFrame,
 )
-from pipecat.services.vartaloop.tts import (
+from pipecat.tests.utils import SleepFrame, run_test
+from websockets.asyncio.server import serve
+from websockets.exceptions import ConnectionClosed
+
+from pipecat_vartaloop.tts import (
     VARTALOOP_SAMPLE_RATE,
     VartaloopHttpTTSService,
     VartaloopTTSService,
     _utterance_body,
 )
-from pipecat.tests.utils import SleepFrame, run_test
 
 FRAME = b"\x01\x00" * 1920  # one 80 ms pcm16 frame at 24 kHz
 

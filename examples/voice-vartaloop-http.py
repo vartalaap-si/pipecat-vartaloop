@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024-2026, Daily
+# Copyright (c) 2026, Vartaloop
 #
 # SPDX-License-Identifier: BSD 2-Clause License
 #
@@ -8,7 +8,6 @@ import os
 
 from dotenv import load_dotenv
 from loguru import logger
-
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.evals.transport import EvalTransportParams
 from pipecat.frames.frames import LLMRunFrame
@@ -23,12 +22,13 @@ from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.services.openai.llm import OpenAILLMService
-from pipecat.services.vartaloop.tts import VartaloopHttpTTSService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.daily.transport import DailyParams
 from pipecat.transports.livekit.transport import LiveKitParams
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.workers.runner import WorkerRunner
+
+from pipecat_vartaloop import VartaloopHttpTTSService
 
 load_dotenv(override=True)
 
