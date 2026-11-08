@@ -1,6 +1,6 @@
-"""Latency of Vartalaap TTS through the Pipecat services vs the raw API, from this machine.
+"""Latency of Vartaloop TTS through the Pipecat services vs the raw API, from this machine.
 
-    VARTALAAP_API_KEY=... uv run python bench/bench.py [--iters 8] [--concurrency 8,16] [--seconds 20]
+    VARTALOOP_API_KEY=... uv run python bench/bench.py [--iters 8] [--concurrency 8,16] [--seconds 20]
 
 The Pipecat path drives a real pipeline (``run_test`` harness): a TTSSpeakFrame goes in, the
 time from the TTSStartedFrame to the first TTSAudioRawFrame is the service's TTFA, to the
@@ -179,21 +179,21 @@ class _Sink:
 async def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument(
-        "--base-url", default=os.environ.get("VARTALAAP_BASE_URL", "https://api.vartaloop.ai")
+        "--base-url", default=os.environ.get("VARTALOOP_BASE_URL", "https://api.vartaloop.ai")
     )
     ap.add_argument("--iters", type=int, default=8)
     args = ap.parse_args()
-    key = os.environ.get("VARTALAAP_API_KEY") or sys.exit("set VARTALAAP_API_KEY")
+    key = os.environ.get("VARTALOOP_API_KEY") or sys.exit("set VARTALOOP_API_KEY")
     base = args.base_url.rstrip("/")
 
-    from pipecat.services.vartalaap.tts import VartalaapTTSService
+    from pipecat.services.vartaloop.tts import VartaloopTTSService
 
-    print(f"# Vartalaap TTS bench — Pipecat service — {time.strftime('%Y-%m-%d %H:%M')} — {base}\n")
+    print(f"# Vartaloop TTS bench — Pipecat service — {time.strftime('%Y-%m-%d %H:%M')} — {base}\n")
     series = {k: Series(k) for k in ("ws/raw/1s", "pipecat/ws/1s", "ws/raw/3s", "pipecat/ws/3s")}
     async with aiohttp.ClientSession() as session:
         raw = RawWS(session, base, key)
         await raw.connect()
-        tts = VartalaapTTSService(api_key=key, url=base.replace("http", "ws", 1) + "/v1/tts/stream")
+        tts = VartaloopTTSService(api_key=key, url=base.replace("http", "ws", 1) + "/v1/tts/stream")
         pipe = _Sink(tts)
         await pipe.start()
         await raw.speak([ONE])

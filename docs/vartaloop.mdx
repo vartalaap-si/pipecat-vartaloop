@@ -1,23 +1,23 @@
 ---
-title: "Vartalaap"
-description: "Hinglish and Indian-language text-to-speech with Vartalaap"
+title: "Vartaloop"
+description: "Hinglish and Indian-language text-to-speech with Vartaloop"
 ---
 
 ## Overview
 
-`VartalaapTTSService` converts text to speech with [Vartalaap](https://vartalaap.si), a Hinglish and Indian-language
+`VartaloopTTSService` converts text to speech with [Vartaloop](https://vartaloop.ai), a Hinglish and Indian-language
 TTS API, over one WebSocket per session. Every sentence of a turn is sent as its own utterance as soon as it is
 aggregated; the server serves them in order and streams each one's 24 kHz PCM back from its first 80 ms frame.
-`VartalaapHttpTTSService` does the same over HTTP, one request per sentence.
+`VartaloopHttpTTSService` does the same over HTTP, one request per sentence.
 
 <CardGroup cols={3}>
-  <Card title="API Reference" icon="code" href="https://docs.pipecat.ai/api-reference/server/services/tts/vartalaap">
+  <Card title="API Reference" icon="code" href="https://docs.pipecat.ai/api-reference/server/services/tts/vartaloop">
     Pipecat's API methods and parameters
   </Card>
-  <Card title="Vartalaap Docs" icon="book" href="https://docs.vartalaap.si">
+  <Card title="Vartaloop Docs" icon="book" href="https://docs.vartaloop.ai">
     Voices, normalisation and the API
   </Card>
-  <Card title="Example Code" icon="play" href="https://github.com/pipecat-ai/pipecat/blob/main/examples/voice/voice-vartalaap.py">
+  <Card title="Example Code" icon="play" href="https://github.com/pipecat-ai/pipecat/blob/main/examples/voice/voice-vartaloop.py">
     A Hinglish voice agent
   </Card>
 </CardGroup>
@@ -25,25 +25,25 @@ aggregated; the server serves them in order and streams each one's 24 kHz PCM ba
 ## Installation
 
 ```bash
-uv add "pipecat-ai[vartalaap]"
+uv add "pipecat-ai[vartaloop]"
 ```
 
-You'll need an API key from the [Vartalaap portal](https://tts.vartaloop.ai), set as `VARTALAAP_API_KEY`.
+You'll need an API key from the [Vartaloop portal](https://tts.vartaloop.ai), set as `VARTALOOP_API_KEY`.
 
 ## Configuration
 
 ### Constructor parameters
 
 <ParamField path="api_key" type="str" required>
-  The Vartalaap API key (`vt_live_…`). Read from `VARTALAAP_API_KEY` when not given.
+  The Vartaloop API key (`vt_live_…`). Read from `VARTALOOP_API_KEY` when not given.
 </ParamField>
 <ParamField path="url" type="str" default="wss://api.vartaloop.ai/v1/tts/stream">
-  The WebSocket endpoint (`VartalaapTTSService`). `VartalaapHttpTTSService` takes `base_url`.
+  The WebSocket endpoint (`VartaloopTTSService`). `VartaloopHttpTTSService` takes `base_url`.
 </ParamField>
 <ParamField path="sample_rate" type="int" default="None">
   Output sample rate. The API produces 24 kHz; audio is resampled when the pipeline runs at another rate.
 </ParamField>
-<ParamField path="settings" type="VartalaapTTSService.Settings">
+<ParamField path="settings" type="VartaloopTTSService.Settings">
   Runtime-updatable settings, see below.
 </ParamField>
 
@@ -70,11 +70,11 @@ You'll need an API key from the [Vartalaap portal](https://tts.vartaloop.ai), se
 ## Usage example
 
 ```python
-from pipecat.services.vartalaap.tts import VartalaapTTSService
+from pipecat.services.vartaloop.tts import VartaloopTTSService
 
-tts = VartalaapTTSService(
-    api_key=os.getenv("VARTALAAP_API_KEY"),
-    settings=VartalaapTTSService.Settings(voice="saanvi", digits="auto"),
+tts = VartaloopTTSService(
+    api_key=os.getenv("VARTALOOP_API_KEY"),
+    settings=VartaloopTTSService.Settings(voice="saanvi", digits="auto"),
 )
 
 pipeline = Pipeline([
@@ -88,14 +88,14 @@ pipeline = Pipeline([
 ])
 ```
 
-Change any setting mid-call with `TTSUpdateSettingsFrame(delta=VartalaapTTSService.Settings(expression="excited"))`; it
+Change any setting mid-call with `TTSUpdateSettingsFrame(delta=VartaloopTTSService.Settings(expression="excited"))`; it
 applies from the next sentence without reconnecting.
 
 ## Frame flow
 
 ```mermaid
 graph TD
-    A[TextFrame] --> B[VartalaapTTSService]
+    A[TextFrame] --> B[VartaloopTTSService]
     B --> C[TTSStartedFrame]
     B --> D[TTSAudioRawFrame 24 kHz pcm16]
     B --> E[TTSStoppedFrame]

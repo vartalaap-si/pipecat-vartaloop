@@ -1,6 +1,6 @@
 """Speak one Hinglish sentence through a minimal Pipecat pipeline and write it to a WAV.
 
-    VARTALAAP_API_KEY=... python examples/say.py "नमस्ते, आपका loan approve हो गया है।" out.wav
+    VARTALOOP_API_KEY=... python examples/say.py "नमस्ते, आपका loan approve हो गया है।" out.wav
 
 The pipeline is just the service and a sink: TTSStartedFrame, the TTSAudioRawFrames as the
 server streams them, TTSStoppedFrame. The time from the first to the second is the TTFA.
@@ -24,7 +24,7 @@ from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.workers.runner import WorkerRunner
 
-from pipecat.services.vartalaap.tts import VartalaapTTSService
+from pipecat.services.vartaloop.tts import VartaloopTTSService
 
 
 class WavSink(FrameProcessor):
@@ -55,7 +55,7 @@ class WavSink(FrameProcessor):
 
 
 async def main(text: str, path: str) -> None:
-    tts = VartalaapTTSService(sample_rate=24000)  # key from VARTALAAP_API_KEY
+    tts = VartaloopTTSService(sample_rate=24000)  # key from VARTALOOP_API_KEY
     sink = WavSink(path, 24000)
     worker = PipelineWorker(Pipeline([tts, sink]), params=PipelineParams(enable_metrics=True))
     runner = WorkerRunner(handle_sigint=False)

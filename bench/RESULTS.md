@@ -1,4 +1,4 @@
-# Vartalaap TTS bench — Pipecat service — 2026-11-08 01:51 — https://api.vartaloop.ai
+# Vartaloop TTS bench — Pipecat service — 2026-11-08 01:51 — https://api.vartaloop.ai
 
 ## Latency (8 interleaved iterations, warm)
 

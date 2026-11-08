@@ -1,22 +1,22 @@
-# pipecat-ai-vartalaap
+# pipecat-ai-vartaloop
 
-[Vartalaap](https://vartalaap.si) text-to-speech for [Pipecat](https://github.com/pipecat-ai/pipecat): Hinglish and
+[Vartaloop](https://vartaloop.ai) text-to-speech for [Pipecat](https://github.com/pipecat-ai/pipecat): Hinglish and
 Indian-language voices (model `narad`), streamed from the first 80 ms frame. This repository is the development home of
-`pipecat.services.vartalaap`, proposed to Pipecat core; it is also installable on its own.
+`pipecat.services.vartaloop`, proposed to Pipecat core; it is also installable on its own.
 
-Tested with Pipecat 1.15 (`main`, 2026-11-07). Maintained by Vartalaap, the company behind the service.
+Tested with Pipecat 1.15 (`main`, 2026-11-07). Maintained by Vartaloop, the company behind the service.
 
 ```bash
-uv add pipecat-ai-vartalaap          # or: uv add "pipecat-ai[vartalaap]" once merged upstream
-export VARTALAAP_API_KEY=vt_live_…    # from https://tts.vartaloop.ai
+uv add pipecat-ai-vartaloop          # or: uv add "pipecat-ai[vartaloop]" once merged upstream
+export VARTALOOP_API_KEY=vt_live_…    # from https://tts.vartaloop.ai
 ```
 
 ```python
-from pipecat.services.vartalaap.tts import VartalaapTTSService
+from pipecat.services.vartaloop.tts import VartaloopTTSService
 
-tts = VartalaapTTSService(
-    api_key=os.environ["VARTALAAP_API_KEY"],
-    settings=VartalaapTTSService.Settings(voice="saanvi", expression="neutral", digits="auto"),
+tts = VartaloopTTSService(
+    api_key=os.environ["VARTALOOP_API_KEY"],
+    settings=VartaloopTTSService.Settings(voice="saanvi", expression="neutral", digits="auto"),
 )
 pipeline = Pipeline([transport.input(), stt, user_aggregator, llm, tts, transport.output(), assistant_aggregator])
 ```
@@ -25,8 +25,8 @@ pipeline = Pipeline([transport.input(), stt, user_aggregator, llm, tts, transpor
 
 | class | base | transport | use when |
 |---|---|---|---|
-| `VartalaapTTSService` | `WebsocketTTSService` | one `WS /v1/tts/stream` per session | conversational agents: every sentence of a turn is its own utterance, sent as soon as it is aggregated; audio frames carry the turn's `context_id`, so an interrupted turn's leftovers are dropped, and the socket is reopened to cancel what the server was still synthesising |
-| `VartalaapHttpTTSService` | `TTSService` | `POST /v1/tts`, chunked | pipelines without interruptions; the body is forwarded chunk by chunk |
+| `VartaloopTTSService` | `WebsocketTTSService` | one `WS /v1/tts/stream` per session | conversational agents: every sentence of a turn is its own utterance, sent as soon as it is aggregated; audio frames carry the turn's `context_id`, so an interrupted turn's leftovers are dropped, and the socket is reopened to cancel what the server was still synthesising |
+| `VartaloopHttpTTSService` | `TTSService` | `POST /v1/tts`, chunked | pipelines without interruptions; the body is forwarded chunk by chunk |
 
 Frames: `TTSStartedFrame` → `TTSAudioRawFrame` (16-bit PCM, 24 kHz, resampled to the pipeline rate when it differs) →
 `TTSStoppedFrame`, with `TTSTextFrame` for the spoken text. TTFB metrics stop on the server's `first_audio_ms` event
@@ -34,7 +34,7 @@ Frames: `TTSStartedFrame` → `TTSAudioRawFrame` (16-bit PCM, 24 kHz, resampled 
 
 ## Settings
 
-`VartalaapTTSService.Settings` (a `TTSSettings`); every field can be changed at runtime with `TTSUpdateSettingsFrame`
+`VartaloopTTSService.Settings` (a `TTSSettings`); every field can be changed at runtime with `TTSUpdateSettingsFrame`
 and applies from the next sentence without reconnecting.
 
 | field | default | API field | notes |
@@ -53,8 +53,8 @@ and applies from the next sentence without reconnecting.
 
 ## Example
 
-`examples/voice-vartalaap.py` is a complete voice agent (`uv run python examples/voice-vartalaap.py` with the Pipecat
-runner; `--transport webrtc` opens a browser client). `examples/voice-vartalaap-http.py` is the HTTP variant.
+`examples/voice-vartaloop.py` is a complete voice agent (`uv run python examples/voice-vartaloop.py` with the Pipecat
+runner; `--transport webrtc` opens a browser client). `examples/voice-vartaloop-http.py` is the HTTP variant.
 
 ## Benchmark
 
@@ -76,9 +76,9 @@ The service adds about 2 ms to time-to-first-audio over a raw WebSocket call (wi
 ## Tests
 
 ```bash
-uv run pytest tests/test_vartalaap_tts.py -n 0     # a fake Vartalaap WebSocket server speaks the real protocol
+uv run pytest tests/test_vartaloop_tts.py -n 0     # a fake Vartaloop WebSocket server speaks the real protocol
 ```
 
 ## Docs
 
-`docs/vartalaap.mdx` is the service page for [pipecat-ai/docs](https://github.com/pipecat-ai/docs).
+`docs/vartaloop.mdx` is the service page for [pipecat-ai/docs](https://github.com/pipecat-ai/docs).
