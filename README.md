@@ -22,6 +22,10 @@ tts = VartaloopTTSService(
 pipeline = Pipeline([transport.input(), stt, user_aggregator, llm, tts, transport.output(), assistant_aggregator])
 ```
 
+Demo (36 s, live API): a greeting, a barge-in mid-answer, the new answer, and an expression change mid-call,
+with first audio at 52–61 ms on every turn: [docs/demo/vartaloop-pipecat-demo.mp4](docs/demo/vartaloop-pipecat-demo.mp4),
+recorded with `examples/interruption_demo.py`.
+
 ## Services
 
 | class | base | transport | use when |
