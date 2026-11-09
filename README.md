@@ -8,7 +8,7 @@ as its own package and imported as `pipecat_vartaloop`.
 Tested with Pipecat 1.15 (`main`, 2026-11-07). Maintained by Vartaloop, the company behind the service.
 
 ```bash
-uv add pipecat-vartaloop
+uv add "pipecat-vartaloop @ git+https://github.com/vartalaap-si/pipecat-vartaloop.git@v0.1.0"
 export VARTALOOP_API_KEY=vt_live_…    # from https://tts.vartaloop.ai
 ```
 
