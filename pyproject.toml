@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pipecat-vartaloop"
-version = "0.1.0"
+version = "0.1.1"
 description = "Vartaloop TTS services for Pipecat: Hinglish and Indian-language text-to-speech, streamed from the first frame"
 readme = "README.md"
 license = "BSD-2-Clause"
@@ -26,6 +26,10 @@ Source = "https://github.com/vartalaap-si/pipecat-vartaloop"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pipecat_vartaloop"]
+
+[tool.hatch.build.targets.sdist]
+# the demo recording and the benchmark stay in git only
+exclude = ["docs/demo", "bench"]
 
 [tool.ruff]
 line-length = 100
